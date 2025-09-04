@@ -1,0 +1,405 @@
+# %%
+import pandas as pd                 # data exploration, cleaning, transformation and analysis
+import numpy as np                  # for mathematical operations
+import seaborn as sns                # build graphs for data visualization
+import matplotlib.pyplot as plt     # backend for seaborn to draw graphs
+
+from sklearn.preprocessing import LabelEncoder #to encode category variables in numerical format
+from sklearn.ensemble import RandomForestRegressor #to train random forest model to predict weekly sales
+
+
+data_train = pd.read_csv("/usercode/train.csv")
+data_test = pd.read_csv("/usercode/test.csv")
+data_features = pd.read_csv("/usercode/features.csv")
+data_stores = pd.read_csv("/usercode/stores.csv") 
+
+
+# print(data_features.head())
+
+# %%
+# Lets check for missing values in each of the datasets
+
+#Features dataframe
+print(data_features.isna().sum())    #show Null values for each column
+
+
+#lets replace the MarkDown columns' null values with 0
+data_features[["MarkDown1", "MarkDown2", "MarkDown3", "MarkDown4", "MarkDown5"]] = data_features[["MarkDown1", "MarkDown2", "MarkDown3", "MarkDown4", "MarkDown5"]].fillna(0)
+
+#lets drop the remaining missing values
+data_features.dropna(inplace=True)
+print(data_features.head()) #now has no null values
+
+print(data_stores.isna().sum()) # does not have nay null values
+print(data_test.isna().sum())   # does not have nay null values
+print(data_train.isna().sum())  # does not have nay null values
+
+# %%
+print(data_stores.isna().sum()) # does not have any null values
+print(data_test.isna().sum())   # does not have any null values
+print(data_train.isna().sum())  # does not have any null values
+
+# %%
+#reconfirm table values and reationships for future joins/merge
+
+print(data_train.head(5))
+print("------------")
+print(data_features.head(5))
+print("------------")
+print(data_stores.head(5))
+print("------------")
+print(data_test.head(5))
+
+# %%
+#data_train and data_features have are related via the 'date' and 'Store' column.
+#The resulting merged table has column 'Store' which is also in the data_stores table.
+#lets merge all three tables
+
+data_train_merge = data_train.merge(data_features, on=['Store', 'Date'], how='inner').merge(data_stores, on=['Store'], how='inner')
+
+print(data_train_merge.head()) #confirm table after join
+
+# %%
+#merging data_test, data_features and data_stores
+
+data_test_merge = data_test.merge(data_features, on=['Store', 'Date'], how='inner').merge(data_stores, on=['Store'], how='inner')
+
+print(data_test_merge.head()) #confirm table after join
+
+# %%
+print(data_test.head())
+
+# %%
+#IsHoliday_x and IsHoliday_y are duplicate columns for both data_train_merge and data_test_merge
+#lets remove the IsHoliday_y column and rename IsHoliday_x in both tables
+
+#dropping IsHoliday_y
+data_train_merge.drop(['IsHoliday_y'], axis=1, inplace=True)
+data_test_merge.drop(['IsHoliday_y'], axis=1, inplace=True)
+
+# %%
+#renaming columns
+data_train_merge.rename(columns={'IsHoliday_x':'IsHoliday'}, inplace=True)
+data_test_merge.rename(columns={'IsHoliday_x':'IsHoliday'}, inplace=True)
+
+
+# %%
+#Lets confirm columns were renamed
+data_test_merge.head()
+
+# %%
+data_train_merge.head()
+
+# %%
+#lets identify outliers
+data_train_merge.describe()
+
+# %%
+#lets remove rows where Weekly_Sales is <=0 and the MarkDown columns are less than 0
+
+data_train_merge_filtered = data_train_merge.loc[
+        (data_train_merge["Weekly_Sales"] > 0) & (data_train_merge["MarkDown2"] >= 0) & (data_train_merge["MarkDown3"] >= 0)
+        ]
+
+data_train_merge_filtered.describe()
+
+# %%
+#lets do same for data_test_merge
+
+data_test_merge.describe()
+
+# %%
+#remove rows where MarkDown..n values are less than 0
+
+data_test_merge_filtered = data_test_merge.loc[
+    (data_test_merge["MarkDown1"] >= 0) & (data_test_merge["MarkDown2"] >= 0) & (data_test_merge["MarkDown3"] >= 0) & (data_test_merge["MarkDown5"] >= 0)
+]
+
+data_test_merge_filtered.describe()
+
+
+# %%
+data_test_merge_filtered.describe()
+
+# %%
+#Weekly_Sales column has a large std value. Lets normalize by applying log 10
+
+#lets create a copy of the filtered data set
+
+data_normalized = data_train_merge_filtered.copy()
+
+data_normalized['Weekly_Sales_Log10'] = np.log10(data_normalized['Weekly_Sales'])
+
+# %%
+data_normalized.dtypes
+# data
+
+# %%
+#lets create a line chart to visualize the weekly sales seasonality pattern between 2011-2012
+
+data_normalized["Date"] = pd.to_datetime(data_normalized["Date"]) #Date column is current an object datatype. lets change it to datetime
+data_normalized["Year"] = data_normalized["Date"].dt.year #lets extract the year from date column into a Year column
+data_normalized["Month"] = data_normalized["Date"].dt.month #lets extract the month from date column in a Month column
+
+
+#lets plot put line chart
+
+ax = sns.lineplot(
+    data=data_normalized,
+    x="Month",
+    y="Weekly_Sales_Log10",
+    hue="Year",
+    errorbar=None
+)
+
+ax.set_title("Weekly_Sales Seasonality Pattern", fontsize=10, pad=10)
+plt.show()
+
+
+# %%
+#lets create a histogram for weekly sales distribution per store Type
+sns.histplot(
+    data = data_normalized,
+    x="Weekly_Sales_Log10",
+    bins=20,
+    hue="Type",
+    multiple="stack",
+    element="step"
+)
+
+plt.show()
+
+# %%
+#lets create a strip plot to visualize sale performance
+plt.figure(figsize=(18,6))
+
+sns.stripplot(
+    data=data_normalized,
+    x="Store",
+    y="Weekly_Sales_Log10"
+)
+
+plt.show()
+
+
+# %%
+#Lets group the normalized dataframe by store and department, then calculate the mean of the weekly sales
+#Put the result into another dataframe named data_normalized_avg
+
+data_normalized_avg = data_normalized.groupby(["Store", "Dept"])["Weekly_Sales_Log10"].mean().to_frame().reset_index()
+
+print(data_normalized_avg.head(3))
+
+
+# %%
+idx = data_normalized_avg.groupby("Store")["Weekly_Sales_Log10"].idxmax() #find index corresponding to maximum value of each sale per store
+
+# %%
+data_best_dept = data_normalized_avg.loc[idx] #lets retrive the rows corresponding to the best performing dept (i.e the rows with the max average weekly sales)
+
+print(data_best_dept)
+
+# %%
+#Lets create a count plot find the best department
+
+ax = sns.countplot(
+    data_best_dept,
+    x="Dept"
+)
+
+#Show the count values in the plot
+for label in ax.containers:
+    ax.bar_label(label) 
+
+
+plt.show()
+
+# %%
+#LEts create a Violin Plot using seaborn to show distribution pattern of weekly sales across temperatures.
+
+#lets first partition the Temperature Column of the normalized DataFrame into three categories: <50, 50-70 and >70
+
+data_normalized["Temp_Cat"] = pd.cut(data_normalized["Temperature"], [-10, 50, 70, 110], labels=["<50", "50-70", ">70"])
+
+
+plt.figure(figsize=(15,5))
+
+sns.violinplot(
+    data=data_normalized, 
+    x="Temp_Cat",
+    y="Weekly_Sales_Log10",
+    hue="Type"
+)
+
+plt.legend(loc="lower left")
+plt.show()
+
+
+# %%
+print(data_normalized.head(5))
+
+# %%
+#Lets examine the average sales made on holidays using a barchat
+data_avg_holiday = data_normalized.groupby(["IsHoliday", "Type"])["Weekly_Sales_Log10"].mean().reset_index() #new data fram to hold groupby results
+
+#create barchat
+plt.figure(figsize=(10,5))
+
+ax = sns.barplot(
+    data = data_avg_holiday,
+    x="IsHoliday",
+    y="Weekly_Sales_Log10",
+    hue="Type"
+)
+
+ax.bar_label(ax.containers[0], fontsize=10)
+ax.bar_label(ax.containers[1], fontsize=10)
+ax.bar_label(ax.containers[2], fontsize=10)
+
+plt.legend(bbox_to_anchor=(1.02, 1), loc="upper left")
+
+plt.show()
+
+
+#from the plot you can see slight more sales were made during the holidays that non-holidays
+#Results like this can help with staffing and putting unique products during holidays
+
+# %%
+#Lets see the relation between weekly sales and economic factors like gas prices, CPI, unemployment rate
+
+#Lets start by storing each result in a dataframe
+data_date_avg_sales = data_normalized.groupby("Date")["Weekly_Sales_Log10"].mean().reset_index()
+data_avg_CPI = data_normalized.groupby(["Date"])["CPI"].mean().reset_index()
+data_avg_fuel_prices = data_normalized.groupby(["Date"])["Fuel_Price"].mean().reset_index()
+data_avg_unemp_rate = data_normalized.groupby(["Date"])["Unemployment"].mean().reset_index()
+
+#Lets create another data frame to merge all dataframes
+data_all = pd.DataFrame()
+
+data_all["Avg_Sales"] = data_date_avg_sales["Weekly_Sales_Log10"]
+data_all["Avg_CPI"] = data_avg_CPI["CPI"]
+data_all["Avg_Fuel_Prices"] = data_avg_fuel_prices["Fuel_Price"]
+data_all["Avg_Unemploy"] = data_avg_unemp_rate["Unemployment"]
+
+
+
+#Lets now create a scatter plot with a facet grid format
+g = sns.PairGrid(data_all)
+g.map(sns.scatterplot)
+
+
+plt.show()
+
+
+# %%
+#Lets see the relation between Sales and Markdowns
+data_markdowns = data_normalized.groupby('Date')[[ "Weekly_Sales", 'MarkDown1', 'MarkDown2', 'MarkDown3', 'MarkDown4', 'MarkDown5']].sum().reset_index()
+
+data_markdowns.set_index('Date', inplace=True)
+
+
+plt.figure(figsize=(18,6))
+sns.lineplot(data = data_markdowns)
+plt.show()
+
+# %%
+#Lets do some feature extraction. We are going to extract features relevant to weekly salesto build a predictive model for forecasting weekly sales.
+
+#The Feature we will extract for training are Date, Store, Dept, Type, IsHoliday, Weekly_Sales.
+#We will use the data we cleaned earlier
+
+data_train_final = data_train_merge_filtered[["Date", "Store", "Dept", "Type", "IsHoliday", "Weekly_Sales"]].reset_index(drop=True)
+
+
+data_test_final = data_train_merge_filtered[["Date", "Store", "Dept", "Type", "IsHoliday"]].reset_index(drop=True)
+
+print(data_train_final.head())
+print(data_test_final.head())
+
+# %%
+#Lets encode categorical variables Type and "IsHoliday" columns for both train and test data. We do this because the model can only take Numerical values
+
+#Encoding for the train data
+data_train_final_encoded = data_train_final.copy()
+data_train_final_encoded[["Type", "IsHoliday"]] = data_train_final[["Type", "IsHoliday"]].apply(LabelEncoder().fit_transform)
+
+#Encoding for the test data
+data_test_final_encoded = data_test_final.copy()
+
+data_test_final_encoded[["Type", "IsHoliday"]] = data_test_final[["Type", "IsHoliday"]].apply(LabelEncoder().fit_transform)
+
+
+
+print(data_train_final_encoded.head())
+print(data_test_final_encoded.head())
+
+
+# %%
+#NExt, we are going to do some Feature Engineering - Create new features from the exisiting columns of both tables
+
+data_train_final_encoded["Date"] = pd.to_datetime(data_train_final_encoded["Date"]) #Convert Date column to datetime format
+data_train_final_encoded["Month"] = data_train_final_encoded["Date"].dt.month #extract month
+data_train_final_encoded["Weekly_Sales_Norm"] = np.log10(data_train_final_encoded["Weekly_Sales"])
+data_train_final_encoded.drop(["Date", "Weekly_Sales"], axis=1, inplace=True)
+
+
+
+data_test_final_encoded["Date"] = pd.to_datetime(data_test_final_encoded["Date"])
+data_test_final_encoded["Month"] = data_test_final_encoded["Date"].dt.month
+data_test_final_encoded.drop(["Date"], axis=1, inplace=True)
+
+
+
+
+
+
+# %%
+print(data_train_final_encoded.head())
+print(data_test_final_encoded.head())
+
+# %%
+#Lets train a random forst regressor model to predict weekly sales
+
+#Separate the training model and convert to a NumPy array
+
+train_y = data_train_final_encoded["Weekly_Sales_Norm"].to_numpy()
+
+train_x = data_train_final_encoded[["Store", "Dept", "Type", "IsHoliday", "Month"]].to_numpy()
+
+
+
+# %%
+regressor = RandomForestRegressor()
+regressor.fit(train_x, train_y)
+
+# %%
+test_x = data_test_final_encoded.to_numpy()
+
+predictions = regressor.predict(test_x)
+
+
+data_test_final["Predictions"]= 10 ** (pd.Series(predictions))
+
+
+
+# %%
+
+data_test_final.head(20)
+
+
+# %%
+data_train_merge_filtered.head(10)
+
+# %%
+#Lets create a line chart to visualize the model’s sale projections showing the performance of the trained model
+
+data_train_final["Date"] = pd.to_datetime(data_train_final["Date"])
+data_test_final["Date"] = pd.to_datetime(data_test_final["Date"])
+
+data_train_final.set_index('Date', inplace=True)
+data_test_final.set_index('Date', inplace=True)
+
+fig, ax = plt.subplots(1,1,figsize=(13,5))
+sns.lineplot(data_train_final["Weekly_Sales"], label="Actual",errorbar=None)
+sns.lineplot(data_test_final["Predictions"],label="Prediction", errorbar=None)
+plt.show()
