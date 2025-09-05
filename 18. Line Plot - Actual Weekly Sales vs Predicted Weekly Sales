@@ -1,0 +1,13 @@
+data_train_final["Date"] = pd.to_datetime(data_train_final["Date"]) # change date column to datetime
+data_test_final["Date"] = pd.to_datetime(data_test_final["Date"])
+
+data_train_final.set_index('Date', inplace=True)
+data_test_final.set_index('Date', inplace=True)
+
+fig, ax = plt.subplots(1,1,figsize=(13,5))
+sns.lineplot(data_train_final["Weekly_Sales"], label="Actual",errorbar=None)
+sns.lineplot(data_test_final["Predictions"],label="Prediction", errorbar=None)
+
+plt.title("Actual vs Predicted Weekly Sales Over Time", fontsize=11, fontweight="bold")
+
+plt.show()
