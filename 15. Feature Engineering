@@ -1,0 +1,13 @@
+#NExt, we are going to do some Feature Engineering - Create new features from the exisiting columns of both tables
+
+data_train_final_encoded["Date"] = pd.to_datetime(data_train_final_encoded["Date"]) #Convert Date column to datetime format
+data_train_final_encoded["Month"] = data_train_final_encoded["Date"].dt.month #extract month
+data_train_final_encoded["Weekly_Sales_Norm"] = np.log10(data_train_final_encoded["Weekly_Sales"])
+data_train_final_encoded.drop(["Date", "Weekly_Sales"], axis=1, inplace=True)
+
+
+
+data_test_final_encoded["Date"] = pd.to_datetime(data_test_final_encoded["Date"])
+data_test_final_encoded["Month"] = data_test_final_encoded["Date"].dt.month
+data_test_final_encoded.drop(["Date"], axis=1, inplace=True)
+
