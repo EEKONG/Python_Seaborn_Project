@@ -1,0 +1,26 @@
+#Lets examine the average sales made on holidays using a barchat
+data_avg_holiday = data_normalized.groupby(["IsHoliday", "Type"])["Weekly_Sales_Log10"].mean().reset_index() #new data fram to hold groupby results
+
+#create barchat
+plt.figure(figsize=(10,5))
+
+ax = sns.barplot(
+    data = data_avg_holiday,
+    x="IsHoliday",
+    y="Weekly_Sales_Log10",
+    hue="Type"
+)
+
+ax.set_title("Sales on Holidays vs Non-Holidays", fontsize=11, fontweight="bold")
+
+ax.bar_label(ax.containers[0], fontsize=10)
+ax.bar_label(ax.containers[1], fontsize=10)
+ax.bar_label(ax.containers[2], fontsize=10)
+
+plt.legend(bbox_to_anchor=(1.02, 1), loc="upper left")
+
+plt.show()
+
+
+#from the plot you can see slight more sales were made during the holidays that non-holidays
+#Results like this can help with staffing and putting unique products during holidays
