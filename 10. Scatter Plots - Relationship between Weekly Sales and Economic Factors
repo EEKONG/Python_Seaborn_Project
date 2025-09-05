@@ -1,0 +1,26 @@
+#Lets see the relation between weekly sales and economic factors like gas prices, CPI, unemployment rate
+
+#Lets start by storing each result in a dataframe
+data_date_avg_sales = data_normalized.groupby("Date")["Weekly_Sales_Log10"].mean().reset_index()
+data_avg_CPI = data_normalized.groupby(["Date"])["CPI"].mean().reset_index()
+data_avg_fuel_prices = data_normalized.groupby(["Date"])["Fuel_Price"].mean().reset_index()
+data_avg_unemp_rate = data_normalized.groupby(["Date"])["Unemployment"].mean().reset_index()
+
+#Lets create another data frame to merge all dataframes
+data_all = pd.DataFrame()
+
+data_all["Avg_Sales"] = data_date_avg_sales["Weekly_Sales_Log10"]
+data_all["Avg_CPI"] = data_avg_CPI["CPI"]
+data_all["Avg_Fuel_Prices"] = data_avg_fuel_prices["Fuel_Price"]
+data_all["Avg_Unemploy"] = data_avg_unemp_rate["Unemployment"]
+
+
+
+#Lets now create a scatter plot with a facet grid format
+g = sns.PairGrid(data_all)
+g.map(sns.scatterplot)
+
+plt.subplots_adjust(top=0.9)
+g.fig.suptitle("Pairwise Relationships of Sales and Economic Indicators", fontsize=11, fontweight="bold")
+
+plt.show()
