@@ -1,0 +1,12 @@
+#Lets do some feature extraction. We are going to extract features relevant to weekly salesto build a predictive model for forecasting weekly sales.
+
+#The Feature we will extract for training are Date, Store, Dept, Type, IsHoliday, Weekly_Sales.
+#We will use the data we cleaned earlier
+
+data_train_final = data_train_merge_filtered[["Date", "Store", "Dept", "Type", "IsHoliday", "Weekly_Sales"]].reset_index(drop=True)
+
+
+data_test_final = data_train_merge_filtered[["Date", "Store", "Dept", "Type", "IsHoliday"]].reset_index(drop=True)
+
+print(data_train_final.head())
+print(data_test_final.head())
