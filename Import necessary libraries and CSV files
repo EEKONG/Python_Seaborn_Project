@@ -1,0 +1,19 @@
+import pandas as pd                 # data exploration, cleaning, transformation and analysis
+import numpy as np                  # for mathematical operations
+import seaborn as sns                # build graphs for data visualization
+import matplotlib.pyplot as plt     # backend for seaborn to draw graphs
+
+from sklearn.preprocessing import LabelEncoder #to encode category variables in numerical format
+from sklearn.ensemble import RandomForestRegressor #to train random forest model to predict weekly sales
+
+
+#Reading the csv files we need for this project
+data_train = pd.read_csv("/usercode/train.csv")
+data_test = pd.read_csv("/usercode/test.csv")
+data_features = pd.read_csv("/usercode/features.csv")
+data_stores = pd.read_csv("/usercode/stores.csv") 
+
+
+#see what we have in the features data
+print(data_features.head())
+print(data_stores.head())
