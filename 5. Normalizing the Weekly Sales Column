@@ -1,0 +1,8 @@
+#from "4. Removing Outliers" Weekly_Sales column has a large std value. Lets normalize by applying log 10
+#lets create a copy of the filtered data set
+
+data_normalized = data_train_merge_filtered.copy()
+
+data_normalized['Weekly_Sales_Log10'] = np.log10(data_normalized['Weekly_Sales'])
+
+data_normalized.dtypes #check data types
