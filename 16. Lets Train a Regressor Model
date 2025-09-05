@@ -1,0 +1,13 @@
+#Lets train a random forst regressor model to predict weekly sales
+
+#Separate the training model and convert to a NumPy array
+
+train_y = data_train_final_encoded["Weekly_Sales_Norm"].to_numpy()
+
+train_x = data_train_final_encoded[["Store", "Dept", "Type", "IsHoliday", "Month"]].to_numpy()
+
+regressor = RandomForestRegressor()
+regressor.fit(train_x, train_y)
+
+test_x = data_test_final_encoded.to_numpy()
+
