@@ -1,0 +1,17 @@
+#Lets create a Violin Plot using seaborn to show distribution pattern of weekly sales across temperatures.
+#lets first partition the Temperature Column of the normalized DataFrame into three categories: <50, 50-70 and >70
+
+data_normalized["Temp_Cat"] = pd.cut(data_normalized["Temperature"], [-10, 50, 70, 110], labels=["<50", "50-70", ">70"])
+
+
+plt.figure(figsize=(15,5))
+
+sns.violinplot(
+    data=data_normalized, 
+    x="Temp_Cat",
+    y="Weekly_Sales_Log10",
+    hue="Type"
+)
+
+plt.legend(loc="lower left")
+plt.show()
