@@ -1,0 +1,11 @@
+#lets create a histogram for weekly sales distribution per store Type
+sns.histplot(
+    data = data_normalized,
+    x="Weekly_Sales_Log10",
+    bins=20,
+    hue="Type",
+    multiple="stack",
+    element="step"
+)
+
+plt.show()
