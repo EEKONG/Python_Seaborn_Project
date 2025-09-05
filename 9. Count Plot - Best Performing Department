@@ -1,0 +1,31 @@
+#Lets group the normalized dataframe by store and department, then calculate the mean of the weekly sales
+#Put the result into another dataframe named data_normalized_avg
+
+data_normalized_avg = data_normalized.groupby(["Store", "Dept"])["Weekly_Sales_Log10"].mean().to_frame().reset_index()
+
+print(data_normalized_avg.head(3))
+
+#find index corresponding to maximum value of each sale per store
+idx = data_normalized_avg.groupby("Store")["Weekly_Sales_Log10"].idxmax()
+
+#lets retrive the rows corresponding to the best performing dept (i.e the rows with the max average weekly sales)
+data_best_dept = data_normalized_avg.loc[idx]
+
+#Lets create a count plot find the best department
+
+ax = sns.countplot(
+    data_best_dept,
+    x="Dept"
+)
+
+ax.set_ylabel("Sales Count") #set y label to Sales Count
+
+ax.set_title("Best Performing Departments", fontsize=12, fontweight="bold") #Add a title
+
+#Show the count values in the plot
+for label in ax.containers:
+    ax.bar_label(label) 
+
+
+plt.show()
+
