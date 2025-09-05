@@ -1,0 +1,19 @@
+#lets create a line chart to visualize the weekly sales seasonality pattern between 2011-2012
+
+data_normalized["Date"] = pd.to_datetime(data_normalized["Date"]) #Date column is current an object datatype. lets change it to datetime
+data_normalized["Year"] = data_normalized["Date"].dt.year #lets extract the year from date column into a Year column
+data_normalized["Month"] = data_normalized["Date"].dt.month #lets extract the month from date column in a Month column
+
+
+#lets plot put line chart
+
+ax = sns.lineplot(
+    data=data_normalized,
+    x="Month",
+    y="Weekly_Sales_Log10",
+    hue="Year",
+    errorbar=None
+)
+
+ax.set_title("Weekly_Sales Seasonality Pattern", fontsize=10, pad=10)
+plt.show()
