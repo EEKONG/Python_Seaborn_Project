@@ -1,0 +1,16 @@
+# Lets check for missing values in each of the datasets
+
+#Features dataframe
+print(data_features.isna().sum())    #show Null values for each column
+
+
+#lets replace the MarkDown columns' null values with 0
+data_features[["MarkDown1", "MarkDown2", "MarkDown3", "MarkDown4", "MarkDown5"]] = data_features[["MarkDown1", "MarkDown2", "MarkDown3", "MarkDown4", "MarkDown5"]].fillna(0)
+
+#lets drop the remaining missing values
+data_features.dropna(inplace=True)
+print(data_features.head()) #now has no null values
+
+print(data_stores.isna().sum()) # does not have nay null values
+print(data_test.isna().sum())   # does not have nay null values
+print(data_train.isna().sum())  # does not have nay null values
