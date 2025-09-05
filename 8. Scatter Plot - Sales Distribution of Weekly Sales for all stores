@@ -1,0 +1,10 @@
+#lets create a strip plot to visualize sale performance
+plt.figure(figsize=(18,6))
+
+sns.stripplot(
+    data=data_normalized,
+    x="Store",
+    y="Weekly_Sales_Log10"
+)
+
+plt.show()
