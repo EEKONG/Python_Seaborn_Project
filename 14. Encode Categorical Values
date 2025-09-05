@@ -1,0 +1,15 @@
+#Lets encode categorical variables Type and "IsHoliday" columns for both train and test data. We do this because the model can only take Numerical values
+
+#Encoding for the train data
+data_train_final_encoded = data_train_final.copy()
+data_train_final_encoded[["Type", "IsHoliday"]] = data_train_final[["Type", "IsHoliday"]].apply(LabelEncoder().fit_transform)
+
+#Encoding for the test data
+data_test_final_encoded = data_test_final.copy()
+
+data_test_final_encoded[["Type", "IsHoliday"]] = data_test_final[["Type", "IsHoliday"]].apply(LabelEncoder().fit_transform)
+
+
+
+print(data_train_final_encoded.head())
+print(data_test_final_encoded.head())
