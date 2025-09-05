@@ -1,0 +1,36 @@
+#reconfirm table values and reationships for future joins/merge
+print(data_train.head(5))
+print("------------")
+print(data_features.head(5))
+print("------------")
+print(data_stores.head(5))
+print("------------")
+print(data_test.head(5))
+
+
+#data_train and data_features are related via the 'Date' and 'Store' column.
+#The resulting merged table has column 'Store' which is also in the data_stores table.
+#lets merge all three tables
+
+data_train_merge = data_train.merge(data_features, on=['Store', 'Date'], how='inner').merge(data_stores, on=['Store'], how='inner')
+data_test_merge = data_test.merge(data_features, on=['Store', 'Date'], how='inner').merge(data_stores, on=['Store'], how='inner')
+
+
+print(data_train_merge.head()) #confirm table after join
+print(data_test_merge.head()) #confirm table after join
+
+#IsHoliday_x and IsHoliday_y are duplicate columns for both data_train_merge and data_test_merge
+#lets remove the IsHoliday_y column and rename IsHoliday_x in both tables
+#dropping IsHoliday_y
+
+data_train_merge.drop(['IsHoliday_y'], axis=1, inplace=True)
+data_test_merge.drop(['IsHoliday_y'], axis=1, inplace=True)
+
+#renaming columns
+data_train_merge.rename(columns={'IsHoliday_x':'IsHoliday'}, inplace=True)
+data_test_merge.rename(columns={'IsHoliday_x':'IsHoliday'}, inplace=True)
+
+#Lets confirm columns were renamed
+data_test_merge.head()
+
+
