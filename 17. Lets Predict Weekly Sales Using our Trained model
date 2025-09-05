@@ -1,0 +1,5 @@
+predictions = regressor.predict(test_x)
+
+data_test_final["Predictions"]= 10 ** (pd.Series(predictions))
+
+data_test_final.head(20) #Display table with predictions 
